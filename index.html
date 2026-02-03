@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://picsum.photos/32/32" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HSAH/JPT/QP15 - Jabatan Perubatan Transfusi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tinos:wght@400;700&display=swap');
+      
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
+      }
+
+      .print-font {
+        font-family: 'Tinos', serif;
+      }
+      
+      @media print {
+        @page {
+          size: A4;
+          margin: 10mm; /* Add browser margin to prevent hardware cut-off */
+        }
+        
+        html, body {
+          height: auto !important;
+          min-height: auto !important;
+          overflow: visible !important;
+          background-color: white;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* Force box model */
+        * {
+          box-sizing: border-box !important;
+        }
+
+        /* Ensure borders print */
+        * {
+          border-color: #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        /* Override min-widths for tables/containers in print */
+        .min-w-\[500px\], .min-w-\[600px\], .min-w-\[200px\] {
+          min-width: 0 !important;
+          width: 100% !important;
+        }
+
+        /* Fix Table borders in print */
+        table {
+          border-collapse: collapse !important;
+          width: 100% !important;
+        }
+
+        /* Page Breaks */
+        tr, td, th {
+          page-break-inside: avoid;
+        }
+        
+        .no-print {
+          display: none !important;
+        }
+
+        .last-page {
+          page-break-after: auto !important;
+          break-after: auto !important;
+        }
+        
+        body > div:empty {
+          display: none !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
