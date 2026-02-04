@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User } from '../types';
 import { JPTLogo } from './Logos';
@@ -18,20 +19,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose, isMand
     e.preventDefault();
     setError('');
 
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     // Updated Authentication Logic with Hardcoded Users
-    if (username === 'admin' && password === 'QP@2026') {
+    // Usernames are now case-insensitive (admin, Admin, ADMIN all work)
+    if (cleanUsername === 'admin' && cleanPassword === 'QP@2026') {
       onLogin({
         username: 'admin',
         name: 'Document Controller',
         role: 'CONTROLLER'
       });
-    } else if (username === 'lab_staff' && password === 'user123') {
+    } else if (cleanUsername === 'lab_staff' && cleanPassword === 'user123') {
       onLogin({
         username: 'lab_staff',
         name: 'Lab Staff',
         role: 'VIEWER'
       });
-    } else if (username === 'JTMP' && password === 'user123') {
+    } else if (cleanUsername === 'jtmp' && cleanPassword === 'user123') {
       onLogin({
         username: 'JTMP',
         name: 'JTMP Staff',
