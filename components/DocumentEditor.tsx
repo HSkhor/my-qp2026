@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { QPData, ProcedureStep, RecordItem, AmendmentItem, FlowchartStep, DistributionItem } from '../types';
-import { Save, ArrowLeft, Plus, Trash2, FileText, List, History, Shield, Table, GitMerge, ArrowUp, ArrowDown, Share2 } from 'lucide-react';
+import { QPData, ProcedureStep, RecordItem, AmendmentItem, FlowchartStep, DistributionItem, Attachment } from '../types';
+import { Save, ArrowLeft, Plus, Trash2, FileText, List, History, Shield, Table, GitMerge, ArrowUp, ArrowDown, Share2, Paperclip } from 'lucide-react';
 import { FlowchartRenderer } from './FlowchartRenderer';
 
 interface DocumentEditorProps {
@@ -10,7 +11,7 @@ interface DocumentEditorProps {
 }
 
 export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, onCancel }) => {
-  const [activeTab, setActiveTab] = useState<'meta' | 'content' | 'procedures' | 'records' | 'flowchart' | 'distribution'>('meta');
+  const [activeTab, setActiveTab] = useState<'meta' | 'content' | 'procedures' | 'records' | 'flowchart' | 'distribution' | 'attachments'>('meta');
   const [formData, setFormData] = useState<QPData>(data);
   const [changeLog, setChangeLog] = useState('');
 
@@ -131,6 +132,35 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
               ...prev.content,
               distributionList: currentList.filter((_, i) => i !== index)
           }
+      }));
+  };
+
+  // Attachments (Forms)
+  const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
+    const currentAttachments = formData.attachments || [];
+    const newAttachments = [...currentAttachments];
+    newAttachments[index] = { ...newAttachments[index], [field]: value };
+    setFormData(prev => ({ ...prev, attachments: newAttachments }));
+  };
+
+  const addAttachment = () => {
+      const newAttachment: Attachment = {
+          id: `att-${Date.now()}`,
+          docNo: 'HSAH/JPT/FE...',
+          title: 'NEW FORM',
+          content: 'Enter form content here...'
+      };
+      setFormData(prev => ({
+          ...prev,
+          attachments: [...(prev.attachments || []), newAttachment]
+      }));
+  };
+
+  const removeAttachment = (index: number) => {
+      const currentAttachments = formData.attachments || [];
+      setFormData(prev => ({
+          ...prev,
+          attachments: currentAttachments.filter((_, i) => i !== index)
       }));
   };
 
@@ -284,6 +314,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
             className={`w-full text-left p-4 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'flowchart' ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'hover:bg-gray-50 text-gray-600'}`}
           >
             <GitMerge size={20} /> Flowchart
+          </button>
+          <button 
+            onClick={() => setActiveTab('attachments')}
+            className={`w-full text-left p-4 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'attachments' ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-600' : 'hover:bg-gray-50 text-gray-600'}`}
+          >
+            <Paperclip size={20} /> Forms / Attachments
           </button>
 
           {/* Amendment Control Panel */}
@@ -630,6 +666,73 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
                             <FlowchartRenderer steps={formData.content?.flowchartData || []} />
                         </div>
                     </div>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'attachments' && (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b">
+                     <h2 className="text-xl font-bold text-slate-800">Forms & Attachments</h2>
+                     <button onClick={addAttachment} className="flex items-center gap-2 text-sm bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700">
+                        <Plus size={16} /> Add New Form
+                     </button>
+                </div>
+                
+                <div className="space-y-6">
+                    {formData.attachments?.map((att, idx) => (
+                        <div key={att.id} className="border border-gray-200 rounded-lg p-6 relative bg-gray-50 group hover:border-blue-400 hover:bg-white transition-all shadow-sm">
+                             <button 
+                                onClick={() => removeAttachment(idx)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded"
+                                title="Remove Attachment"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Form Document No</label>
+                                    <input 
+                                        type="text" 
+                                        value={att.docNo} 
+                                        onChange={(e) => handleAttachmentChange(idx, 'docNo', e.target.value)} 
+                                        className="w-full border p-2 rounded text-sm font-bold" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Title</label>
+                                    <input 
+                                        type="text" 
+                                        value={att.title} 
+                                        onChange={(e) => handleAttachmentChange(idx, 'title', e.target.value)} 
+                                        className="w-full border p-2 rounded text-sm" 
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Content (Form Layout)</label>
+                                <textarea 
+                                    rows={8}
+                                    value={getDisplayValue(att.content)} 
+                                    onChange={(e) => handleAttachmentChange(idx, 'content', e.target.value)} 
+                                    placeholder={isComplexContent(att.content) ? "[Complex Form Layout] - Editing will overwrite existing complex layout with plain text." : "Enter form structure or text here..."}
+                                    className="w-full border p-3 rounded text-sm font-mono" 
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1 italic">
+                                    Note: You can paste HTML structure or simple text here. Complex existing forms (like those in QP14) may display as [Complex Object] and will be simplified if edited.
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                    {(!formData.attachments || formData.attachments.length === 0) && (
+                        <div className="text-center py-16 text-gray-400 italic bg-gray-50 rounded border border-dashed flex flex-col items-center gap-2">
+                            <Paperclip size={32} className="opacity-20"/>
+                            <p>No forms or attachments found.</p>
+                            <button onClick={addAttachment} className="text-blue-600 hover:underline text-sm font-bold">Create First Form</button>
+                        </div>
+                    )}
                 </div>
             </div>
         )}
