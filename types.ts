@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export type Role = 'CONTROLLER' | 'VIEWER';
@@ -58,6 +59,7 @@ export interface Attachment {
   docNo: string;
   title: string;
   content: React.ReactNode;
+  fileUrl?: string; // Base64 data URL for uploaded images/forms
 }
 
 export interface QPData {

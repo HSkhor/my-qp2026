@@ -116,9 +116,19 @@ export default function App() {
                      <h2 className="font-bold text-lg mb-6 text-center border-b-2 border-black pb-4 uppercase bg-gray-50 pt-4">
                         {attachment.title}
                      </h2>
-                     <div className="mt-4 overflow-x-auto print:overflow-visible">
-                        {attachment.content}
-                     </div>
+                     {attachment.fileUrl ? (
+                         <div className="w-full flex justify-center">
+                             <img 
+                                src={attachment.fileUrl} 
+                                alt={attachment.title} 
+                                className="w-full max-w-full h-auto object-contain border border-gray-200 shadow-sm print:border-none print:shadow-none" 
+                             />
+                         </div>
+                     ) : (
+                         <div className="mt-4 overflow-x-auto print:overflow-visible">
+                            {attachment.content}
+                         </div>
+                     )}
                 </DocumentLayout>
             )
         }

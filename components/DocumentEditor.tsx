@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { QPData, ProcedureStep, RecordItem, AmendmentItem, FlowchartStep, DistributionItem, Attachment } from '../types';
-import { Save, ArrowLeft, Plus, Trash2, FileText, List, History, Shield, Table, GitMerge, ArrowUp, ArrowDown, Share2, Paperclip } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, FileText, List, History, Shield, Table, GitMerge, ArrowUp, ArrowDown, Share2, Paperclip, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { FlowchartRenderer } from './FlowchartRenderer';
 
 interface DocumentEditorProps {
@@ -143,12 +143,29 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
     setFormData(prev => ({ ...prev, attachments: newAttachments }));
   };
 
+  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleAttachmentChange(index, 'fileUrl', reader.result as string);
+        // Optional: Clear text content if image is uploaded to avoid confusion
+        // handleAttachmentChange(index, 'content', ''); 
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    handleAttachmentChange(index, 'fileUrl', undefined);
+  };
+
   const addAttachment = () => {
       const newAttachment: Attachment = {
           id: `att-${Date.now()}`,
           docNo: 'HSAH/JPT/FE...',
           title: 'NEW FORM',
-          content: 'Enter form content here...'
+          content: ''
       };
       setFormData(prev => ({
           ...prev,
@@ -711,18 +728,60 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
                                 </div>
                             </div>
                             
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1">Content (Form Layout)</label>
-                                <textarea 
-                                    rows={8}
-                                    value={getDisplayValue(att.content)} 
-                                    onChange={(e) => handleAttachmentChange(idx, 'content', e.target.value)} 
-                                    placeholder={isComplexContent(att.content) ? "[Complex Form Layout] - Editing will overwrite existing complex layout with plain text." : "Enter form structure or text here..."}
-                                    className="w-full border p-3 rounded text-sm font-mono" 
-                                />
-                                <p className="text-[10px] text-gray-400 mt-1 italic">
-                                    Note: You can paste HTML structure or simple text here. Complex existing forms (like those in QP14) may display as [Complex Object] and will be simplified if edited.
-                                </p>
+                            <div className="space-y-4">
+                                <div>
+                                  <label className="block text-xs font-bold text-gray-500 mb-2">Upload Ready-Made Form (Image)</label>
+                                  
+                                  {!att.fileUrl ? (
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer relative">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            onChange={(e) => handleFileUpload(idx, e)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                        <Upload className="text-gray-400 mb-2" size={32} />
+                                        <p className="text-sm text-gray-600 font-bold">Click to Upload Image</p>
+                                        <p className="text-xs text-gray-400">JPG, PNG (A4 Size Recommended)</p>
+                                    </div>
+                                  ) : (
+                                    <div className="relative border rounded-lg overflow-hidden bg-gray-100">
+                                        <img src={att.fileUrl} alt="Preview" className="w-full h-48 object-cover opacity-75" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                            <div className="bg-white p-2 rounded shadow flex items-center gap-2">
+                                                <ImageIcon size={16} className="text-blue-600" />
+                                                <span className="text-xs font-bold">Image Uploaded</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => removeFile(idx)}
+                                            className="absolute top-2 right-2 bg-white text-red-500 p-1.5 rounded shadow hover:bg-red-50"
+                                            title="Remove Image"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Only show text editor if no image is uploaded, or as a caption field */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">
+                                        {att.fileUrl ? 'Additional Notes / Caption (Optional)' : 'Content (Form Layout / Text)'}
+                                    </label>
+                                    <textarea 
+                                        rows={att.fileUrl ? 3 : 8}
+                                        value={getDisplayValue(att.content)} 
+                                        onChange={(e) => handleAttachmentChange(idx, 'content', e.target.value)} 
+                                        placeholder={att.fileUrl ? "Enter notes regarding this attachment..." : "Enter form structure or text here..."}
+                                        className="w-full border p-3 rounded text-sm font-mono" 
+                                    />
+                                    {!att.fileUrl && (
+                                        <p className="text-[10px] text-gray-400 mt-1 italic">
+                                            Note: You can paste HTML structure or simple text here. Complex existing forms may display as [Complex Object] and will be simplified if edited.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
