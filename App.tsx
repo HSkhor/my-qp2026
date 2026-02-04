@@ -67,7 +67,7 @@ export default function App() {
     setMode('view');
   };
 
-  const handleUploadClick = () => {
+  const handleCreateQP = () => {
       const newId = `new-${Date.now()}`;
       const newDoc: QPData = {
           id: newId,
@@ -84,6 +84,39 @@ export default function App() {
       setRegistry(prev => [newDoc, ...prev]);
       setSelectedQPId(newId);
       setMode('edit');
+  };
+
+  const handleUploadForm = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const result = e.target?.result as string;
+        const newId = `form-${Date.now()}`;
+        const newDoc: QPData = {
+            id: newId,
+            docNo: "HSAH/JPT/FE-NEW",
+            title: file.name.replace(/\.[^/.]+$/, "").toUpperCase().replace(/[-_]/g, ' '),
+            versionNo: "01",
+            amendmentNo: "00",
+            dateOfIssue: new Date().toLocaleDateString('en-GB'),
+            preparedBy: { name: user?.name || "Admin", designation: "Scientific Officer", date: "" },
+            approvedBy: { name: "TBA", designation: "Head of Department", date: "" },
+            procedures: [], 
+            content: {},
+            attachments: [
+                {
+                    id: `att-${Date.now()}`,
+                    docNo: "HSAH/JPT/FE-NEW",
+                    title: "UPLOADED FORM",
+                    content: "",
+                    fileUrl: result
+                }
+            ]
+        };
+        setRegistry(prev => [newDoc, ...prev]);
+        setSelectedQPId(newId);
+        setMode('edit');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePrint = (mode: 'full' | 'single') => {
@@ -354,10 +387,11 @@ export default function App() {
         <Dashboard 
             qps={registry} 
             user={user}
-            onSelect={(qp, m, section) => handleSelectQP(qp, m as 'view'|'edit', section)}
+            onSelect={(qp, m, section) => handleSelectQP(qp, m as 'view' | 'edit', section)}
             onLoginClick={() => {}} 
             onLogoutClick={handleLogout}
-            onUploadClick={handleUploadClick}
+            onCreateQP={handleCreateQP}
+            onUploadForm={handleUploadForm}
             onMasterListClick={() => setMode('masterlist')}
         />
     );

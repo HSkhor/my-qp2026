@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useRef } from 'react';
 import { QPData, User } from '../types';
-import { Search, Edit3, Book, ClipboardList, LayoutGrid, FileText, FileSpreadsheet, LogIn, LogOut, UploadCloud, UserCircle, ListChecks, Clock } from 'lucide-react';
+import { Search, Edit3, Book, ClipboardList, LayoutGrid, FileText, FileSpreadsheet, LogIn, LogOut, UploadCloud, UserCircle, ListChecks, Clock, Plus } from 'lucide-react';
 import { JPTLogo } from './Logos';
 
 interface DashboardProps {
@@ -9,7 +10,8 @@ interface DashboardProps {
   onSelect: (qp: QPData, mode: 'view' | 'edit', sectionId?: string) => void;
   onLoginClick: () => void;
   onLogoutClick: () => void;
-  onUploadClick: () => void;
+  onCreateQP: () => void;
+  onUploadForm: (file: File) => void;
   onMasterListClick: () => void;
 }
 
@@ -21,13 +23,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSelect, 
   onLoginClick, 
   onLogoutClick,
-  onUploadClick,
+  onCreateQP,
+  onUploadForm,
   onMasterListClick
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<Category>('ALL');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isController = user?.role === 'CONTROLLER';
+
+  // Helper to handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        onUploadForm(e.target.files[0]);
+        // Reset input so same file can be selected again if needed
+        e.target.value = '';
+    }
+  };
 
   // Helper to determine doc type
   const getDocType = (docNo: string) => {
@@ -311,12 +324,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
 
               {isController && (
-                  <button 
-                      onClick={onUploadClick}
-                      className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all"
-                  >
-                      <UploadCloud size={18} /> Upload Document
-                  </button>
+                  <div className="flex gap-3">
+                      <button 
+                          onClick={onCreateQP}
+                          className="flex items-center gap-2 bg-white text-indigo-600 border border-indigo-200 px-5 py-2.5 rounded-lg font-bold shadow-sm hover:bg-indigo-50 transition-all"
+                      >
+                          <Plus size={18} /> New Procedure
+                      </button>
+
+                      <button 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all"
+                      >
+                          <UploadCloud size={18} /> Upload Form
+                      </button>
+                      <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={handleFileChange}
+                      />
+                  </div>
               )}
             </div>
         </div>
