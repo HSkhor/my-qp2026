@@ -14,6 +14,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
   const [activeTab, setActiveTab] = useState<'meta' | 'content' | 'procedures' | 'records' | 'flowchart' | 'distribution' | 'attachments'>('meta');
   const [formData, setFormData] = useState<QPData>(data);
   const [changeLog, setChangeLog] = useState('');
+  const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // --- Handlers ---
 
@@ -230,6 +232,46 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
           ...prev,
           content: { ...prev.content, flowchartData: newSteps }
       }));
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedStepIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedStepIndex === null || draggedStepIndex === dropIndex) {
+      setDraggedStepIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const currentSteps = formData.content?.flowchartData || [];
+    const newSteps = [...currentSteps];
+    const [draggedItem] = newSteps.splice(draggedStepIndex, 1);
+    newSteps.splice(dropIndex, 0, draggedItem);
+
+    setFormData(prev => ({
+        ...prev,
+        content: { ...prev.content, flowchartData: newSteps }
+    }));
+
+    setDraggedStepIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedStepIndex(null);
+    setDragOverIndex(null);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -618,15 +660,41 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({ data, onSave, on
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Editor Side */}
-                    <div className="space-y-3">
+                    <div className="relative pl-8 flex flex-col gap-4">
                          {(!formData.content?.flowchartData || formData.content.flowchartData.length === 0) && (
-                             <div className="p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200">
+                             <div className="p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200 -ml-8">
                                 No flowchart steps defined yet. Click "Add Step" to build your flowchart visually.
                              </div>
                          )}
 
+                         {/* Vertical line behind the steps */}
+                         {formData.content?.flowchartData && formData.content.flowchartData.length > 1 && (
+                             <div className="absolute left-[11px] top-8 bottom-8 w-0.5 bg-blue-200 z-0"></div>
+                         )}
+
                          {formData.content?.flowchartData?.map((step, idx) => (
-                             <div key={step.id} className="bg-white border border-gray-200 p-4 rounded shadow-sm relative group hover:border-blue-400">
+                             <div 
+                                key={step.id} 
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, idx)}
+                                onDragOver={(e) => handleDragOver(e, idx)}
+                                onDrop={(e) => handleDrop(e, idx)}
+                                onDragEnd={handleDragEnd}
+                                className={`bg-white border-2 p-4 rounded-lg shadow-sm relative group z-10 transition-all cursor-move
+                                    ${draggedStepIndex === idx ? 'opacity-50 border-dashed border-blue-400' : 'border-gray-200 hover:border-blue-400'}
+                                    ${dragOverIndex === idx && draggedStepIndex !== idx ? 'border-blue-500 scale-[1.02] shadow-md' : ''}
+                                `}
+                             >
+                                 {/* Node circle on the line */}
+                                 <div className="absolute -left-[25px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white z-20"></div>
+                                 
+                                 {/* Arrow pointing to next step */}
+                                 {idx < (formData.content?.flowchartData?.length || 0) - 1 && (
+                                     <div className="absolute -bottom-[22px] -left-[26px] text-blue-400 z-20 bg-white rounded-full">
+                                         <ArrowDown size={14} />
+                                     </div>
+                                 )}
+
                                  <div className="absolute right-2 top-2 flex gap-1">
                                     <button onClick={() => moveFlowchartStep(idx, 'up')} className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-700" title="Move Up"><ArrowUp size={14}/></button>
                                     <button onClick={() => moveFlowchartStep(idx, 'down')} className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-700" title="Move Down"><ArrowDown size={14}/></button>

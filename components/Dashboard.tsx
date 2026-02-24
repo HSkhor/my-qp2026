@@ -102,43 +102,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // Filter Forms
   const filteredForms = allForms.filter(form => {
       if (activeCategory !== 'FORM' && activeCategory !== 'ALL') return false;
-      if (activeCategory !== 'FORM') return false;
 
       return form.docNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
              form.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const renderContent = () => {
+    const formElements = filteredForms.map(form => (
+        <div key={form.id} onClick={() => onSelect(form.parentQP, 'view', `att-${form.id}`)}
+            className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col relative overflow-hidden"
+        >
+            <div className="absolute top-0 right-0 px-3 py-1.5 rounded-bl-xl text-[10px] font-bold tracking-wider border-b border-l bg-green-50 text-green-700 border-green-100">
+                FORM
+            </div>
+
+            <div className="mb-4 mt-2">
+                <span className="inline-block px-2.5 py-1 rounded-md bg-green-50 text-green-700 text-xs font-bold font-mono border border-green-100">
+                    {form.docNo}
+                </span>
+            </div>
+            
+            <h3 className="font-bold text-slate-800 text-base leading-snug mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                {form.title}
+            </h3>
+
+            <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-1 text-xs text-gray-400">
+                <span className="font-medium text-gray-500">Ref: {form.parentQP.docNo}</span>
+                <span className="truncate">{form.parentQP.title}</span>
+            </div>
+        </div>
+    ));
+
     if (activeCategory === 'FORM') {
         if (filteredForms.length === 0) return null;
-        return filteredForms.map(form => (
-            <div key={form.id} onClick={() => onSelect(form.parentQP, 'view', `att-${form.id}`)}
-                className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col relative overflow-hidden"
-            >
-                <div className="absolute top-0 right-0 px-3 py-1.5 rounded-bl-xl text-[10px] font-bold tracking-wider border-b border-l bg-green-50 text-green-700 border-green-100">
-                    FORM
-                </div>
-
-                <div className="mb-4 mt-2">
-                    <span className="inline-block px-2.5 py-1 rounded-md bg-green-50 text-green-700 text-xs font-bold font-mono border border-green-100">
-                        {form.docNo}
-                    </span>
-                </div>
-                
-                <h3 className="font-bold text-slate-800 text-base leading-snug mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {form.title}
-                </h3>
-
-                <div className="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-1 text-xs text-gray-400">
-                    <span className="font-medium text-gray-500">Ref: {form.parentQP.docNo}</span>
-                    <span className="truncate">{form.parentQP.title}</span>
-                </div>
-            </div>
-        ));
+        return formElements;
     }
 
     // Default Render for QP/WI
-    return filteredQPs.map((qp) => {
+    const qpElements = filteredQPs.map((qp) => {
         const type = getDocType(qp.docNo);
         const typeColors = {
             QP: 'bg-blue-50 text-blue-700 border-blue-100',
@@ -188,10 +189,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
         );
       });
+
+      if (activeCategory === 'ALL') {
+          return [...qpElements, ...formElements];
+      }
+
+      return qpElements;
   };
 
   const hasResults = (activeCategory === 'FORM' && filteredForms.length > 0) || 
-                     (activeCategory !== 'FORM' && filteredQPs.length > 0);
+                     (activeCategory === 'ALL' && (filteredQPs.length > 0 || filteredForms.length > 0)) ||
+                     (activeCategory !== 'FORM' && activeCategory !== 'ALL' && filteredQPs.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50 font-inter text-slate-800">

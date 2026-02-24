@@ -83,6 +83,7 @@ export default function App() {
       };
       setRegistry(prev => [newDoc, ...prev]);
       setSelectedQPId(newId);
+      setActiveSection('cover');
       setMode('edit');
   };
 
@@ -114,6 +115,7 @@ export default function App() {
         };
         setRegistry(prev => [newDoc, ...prev]);
         setSelectedQPId(newId);
+        setActiveSection('cover');
         setMode('edit');
     };
     reader.readAsDataURL(file);
@@ -164,6 +166,9 @@ export default function App() {
                      )}
                 </DocumentLayout>
             )
+        } else {
+            // Fallback if attachment was deleted
+            return <CoverPage data={qp} />;
         }
     }
 
@@ -343,7 +348,7 @@ export default function App() {
             </DocumentLayout>
         );
       default:
-        return <div className="p-12 text-center text-gray-500">Section content under construction...</div>;
+        return <CoverPage data={qp} />;
     }
   };
 
